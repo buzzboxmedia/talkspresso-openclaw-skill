@@ -15,15 +15,55 @@ metadata:
 
 Manage a Talkspresso business via the REST API using `curl` and `jq`.
 
-## Setup
+## First Run: Guided Onboarding
 
-The user needs a `TALKSPRESSO_API_KEY`. If missing:
+When this skill is first triggered, check if `TALKSPRESSO_API_KEY` is set. If not, walk the user through setup conversationally:
 
-1. Direct them to https://app.talkspresso.com/settings/api-keys to generate one
-2. If they don't have a Talkspresso account, direct them to https://talkspresso.com/signup
-3. Set it: `export TALKSPRESSO_API_KEY="tsp_..."`
+**Step 1: Welcome**
+> "Hey! I can help you manage your Talkspresso business right from here -- bookings, services, products, earnings, everything. Let's get you connected. Do you already have a Talkspresso account?"
 
-If the user is new to Talkspresso, help them set up: profile, timezone, availability, first service.
+- If **yes**: "Great! Go to https://app.talkspresso.com/settings/api-keys, generate an API key, and paste it here."
+- If **no**: "No problem. Sign up at https://talkspresso.com/signup (takes 30 seconds), then go to Settings > API Keys to generate your key. Paste it here when you're ready."
+
+Once they provide the key, set it: `export TALKSPRESSO_API_KEY="tsp_..."`
+
+**Step 2: Check their profile**
+Fetch `GET /profile/me` and check what's filled in. Then:
+
+> "OK, I've got your account. Let me help you get set up so people can book you."
+
+**Step 3: Profile basics** (if empty)
+Ask them conversationally:
+- "What do you do? (e.g., 'Executive Coach', 'Fitness Creator', 'Marketing Consultant')" -> set `expert_title`
+- "Give me a one-liner about what you help people with." -> set `about`
+- "Want to add a longer bio? Or I can write one based on what you just told me." -> set `bio` (offer to generate it)
+
+Update profile with `PUT /profile`.
+
+**Step 4: Timezone & availability**
+- "What timezone are you in?" -> update `PUT /calendar` with timezone
+- "What days and hours do you want to be bookable? (e.g., Mon-Fri 9am-5pm)" -> update availability
+
+**Step 5: First service**
+> "Let's create your first session so people can book you. What kind of session do you want to offer?"
+
+Options to suggest:
+- "A free 15-minute intro call (great for getting started)"
+- "A paid 1:1 coaching/consulting session"
+- "A group workshop or webinar"
+
+Ask for title, duration, and price. Create it with `POST /service`.
+
+**Step 6: Share their link**
+> "You're live! Here's your booking page: https://talkspresso.com/YOUR_HANDLE
+> Share this link anywhere -- your bio, LinkedIn, email signature. Anyone who clicks it can book a session with you."
+
+**Step 7: Products (optional)**
+> "One more thing -- do you have any PDFs, guides, templates, or videos you want to sell? I can set up digital products for you too. Just tell me about them or share a file."
+
+If yes, walk through product creation. If no, wrap up.
+
+**After onboarding, on subsequent uses:** Skip the setup. Just respond to what they ask for -- check bookings, create services, view earnings, etc. Detect what they need from context.
 
 ## API Pattern
 
